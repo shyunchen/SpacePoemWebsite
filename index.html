@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.3.1/p5.min.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-auth.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-database.js"></script>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Firebase App</title>
+    </head>
+    <body>
+        <h1>Firebase App</h1>
+        <h3>(with p5.js)</h3>
+        <br/>
+        <p>
+            <div id="FirebaseDiv"></div>
+        </p>
+        <br/>
+        <p>
+            <ol id="scorelist"></ol>
+        </p>
+
+        <script>
+            /*
+            Firebase app using p5.js
+            */
+            let score;
+            let database;
+            let ref;
+            
+            function setup() {
+                score = 0;
+
+                canvas = createCanvas(150, 150);
+                p0 = createP('Click the button to get points.');
+                clickButton = createButton('click');
+                clickButton.mousePressed(increaseScore);
+                p1 = createP(' ');
+                initialInput = createInput('initials');
+                p2 = createP(' ');
+                submitButton = createButton('submit');
+                submitButton.mousePressed(submitScore);
+                //
+                canvas.parent('FirebaseDiv');
+                p0.parent('FirebaseDiv');
+                clickButton.parent('FirebaseDiv');
+                p1.parent('FirebaseDiv');
+                initialInput.parent('FirebaseDiv');
+                p2.parent('FirebaseDiv');
+                submitButton.parent('FirebaseDiv');
+                //
+                // Firebase - Setup Beg
+                // w/ fifteen15footer@gmail.com account
+                // if you caught the following error - "Uncaught TypeError: firebase.database is not a function"
+                // then the Database and Auth pieces need to be required separately since they aren't bundled with the Firebase app.
+                // src="https://www.gstatic.com/firebasejs/8.6.5/firebase-auth.js"
+                // src="https://www.gstatic.com/firebasejs/8.6.5/firebase-database.js"
+                
+                // Your web app's Firebase configuration
+                var firebaseConfig = {
+                    apiKey: "AIzaSyBLUZ4FgKHvQwSvNnI2a4pJsEtyzJj1DQU",
+                    authDomain: "my-firebase-project-b645e.firebaseapp.com",
+                    projectId: "my-firebase-project-b645e",
+                    storageBucket: "my-firebase-project-b645e.appspot.com",
+                    messagingSenderId: "473870878009",
+                    appId: "1:473870878009:web:63474efa10d45cbcb954e8"
+                };
+                // Initialize Firebase
+                firebase.initializeApp(firebaseConfig);
+                //console.log(firebase);
+                database = firebase.database();
+                ref = database.ref('scores');
+                //
+                getFirebaseData();
+                // Firebase - Setup End
+            }
+
+            function getFirebaseData() {
+                //ref.on('value', getData, getError);
+                ref.orderByChild('score').on('value', getData, getError);
+                //ref.orderByChild("name").on('value', snap => {
+                //    console.log(snap.val());
+                //});
+            }
+
+            function getData(data) {
+                console.log('Firebase Orig Data: ');
+                console.log(data.val());
+                if (data.val()) {
+                    const scores = data.val();
+                    console.log('Firebase Data: ', scores);
+                    const keys = Object.keys(scores);
+                    console.log('Firebase Data keys: ', keys);
+                    removeOldList();
+                    for (key of keys) {
+                        const name = scores[key].name;
+                        const score = scores[key].score;
+                        console.log('name:' + name + ' score:' + score);
+                        const li = createElement('li', name + " : " + score);
+                        li.parent('scorelist');
+                    }
+                }
+                else {
+                    console.log('No data stored in the Firebase!');
+                }
+            }
+            function getError(error) {
+                console.log('Firebase Error: ', error);
+            }
+
+            function removeOldList() {
+                const listings = selectAll('li');
+                for (list of listings) {
+                    list.remove();
+                }
+            }
+
+            function draw() {
+                background(0);
+                textAlign(CENTER);
+                textSize(32);
+                fill(255);
+                text(score, width/2, height/2);
+            }
+
+            function increaseScore() {
+                score++;
+            }
+
+            function submitScore() {
+                const data = { name: initialInput.value(),
+                               score: score };
+                console.log(data);
+                ref.push(data);
+            }
+
+        </script>
+
+    </body>
+</html>
